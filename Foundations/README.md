@@ -205,4 +205,136 @@ Date: Sun, 12 Apr 2020 14:15:57 +0800
 Remove me from your distribution list. -D.
 ```
 
-#### 
+### Pipeline
+
+#### Command Grouping
+
+```bash
+ls /etc > files
+
+wc < files # Count lines, words, characters
+186  186 1785
+
+wc -l < files  # Count lines
+
+ls /etc | wc -l # piping output of ls into wc
+186
+ls /usr | cat -n # With line number
+   	 1  bin
+     2  games
+     3  include
+     4  lib
+     5  libexec
+     6  local
+     7  sbin
+     8  share
+     9  src
+```
+
+##### Exit Status
+
+```bash
+echo $? # Print exit status (zero)
+wc xyzzy
+wc: xyzzy: No such file or directory
+echo $? # Print exit status (non-zero) , if not zero means fail.
+1
+```
+
+##### **Examples**
+
+```bash
+touch a-file
+cat -n a-file > b-file && rm a-file # Execute second only if first succeeds.
+# So a-file will be removed since b-file succesfully created.
+cat -n bfile >cfile ** rm b-file # bfile typo; 2nd command will fail 
+```
+
+##### Disjunction Operator
+
+`OR || - A OR B`  - Only run 2nd command if first fails.
+
+```bash
+touch a-file
+cp a-file b-file || echo Copy failed  # Execute if did not succeed
+cp afile bfile || echo Copy failed
+cp: cannot stat 'afile': No such file or directory
+Copy failed
+```
+
+##### Negation Operator
+
+`Exclamation Mark !` - 
+
+```bash
+! date # Command succeeds
+echo $? # Print 1 because first command succeed with exit code 0. Negation makes it 1.
+1
+! ls xyzzy # Command fails
+ls: cannot access 'xyzzy': No such file or directory
+echo $?  # Print 0, command fails so exit code 1 becomes 0.
+0 
+```
+
+##### Grouping Commands
+
+`Semi-colon ;` - Put commands on the same line
+
+`Curly brackets {}` -  Put two commands in curly brackets group them and  to redirect output of command group together.
+
+```bash
+echo 'Today is: ' ; date
+Today is: 
+Sun Apr 12 16:30:25 +08 2020
+
+# -n flag means do not append a newline
+echo -n 'Today is: ' ; date # Execute two commands in a row 
+Today is: Sun Apr 12 16:20:58 +08 2020
+echo 'Today is: ' ; date > timestamp # Execute two commands, but only date will be 											   redirected to timestamp file
+cat timestamp
+Sun Apr 12 16:23:36 +08 2020
+
+{ echo -n 'Today is: ' ; date ; } > timestamp # redirecting output to timestamp file
+cat timestamp
+Today is: Sun Apr 12 16:21:53 +08 2020
+
+{ echo -n 'Today is: '; date; } | wc -c # Pipe output of both to wc
+39
+
+{             # Multi-line command by starting with curly bracket
+> echo -n 'Today is: '
+> date
+> }           # Only executed if closed.
+Today is: Sun Apr 12 16:26:37 +08 2020
+```
+
+### Quiz
+
+Output the same as the command `ls /etc | cat -n`
+
+```bash
+ls /etc >/tmp/ls ; cat -n </tmp/ls
+```
+
+Consider the following command.
+
+```bash
+{ ls /tmp/x && rm /tmp/x ; } 
+{ ls /tmp/x || touch /tmp/x ; }
+```
+
+Which of the following will be true after the command is executed?
+
+- The old file `/tmp/x` will be deleted, if it exists.
+
+  - If `x` doesn't exist, `ls` will cause an error and as such the `rm` command will not be executed.
+  - If `x` already exists, `rm` command will be executed and will remove the file.
+
+- A new file named `/tmp/x` will always be created. 
+
+  - Since `x` doesn't exist, `ls` command will fail, as a result the `touch` command will be executed and create the file.
+
+    
+
+## Scripts
+
