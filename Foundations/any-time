@@ -1,0 +1,3 @@
+#!/bin/sh
+echo -n "The time in $1 is " # Use first argument
+TZ=$1 date

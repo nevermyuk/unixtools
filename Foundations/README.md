@@ -145,7 +145,7 @@ echo "$name \"Hell\" $surname received \$4.99"
 echo 'No backslashes (\) here. Go out of ' \' ' and use them.'
 ```
 
-**`double quote` - Variable preceded by a dollar sign are specially treated but wildcards and single quotes lose special meaning**
+**`double quote` - Variable preceded by a dollar sign are specially treated but Wildcards and single quotes lose special meaning**
 
 #### Multi-line
 
@@ -337,4 +337,65 @@ Which of the following will be true after the command is executed?
     
 
 ## Scripts
+
+```bash
+cat >paris-time
+#!/bin/sh  # shebang
+sh paris-time # invoke shell to run script
+chmod +x paris-time # make script executable
+./paris-time  # run it by specifying path
+PATH=$PATH:. # add current dir to path
+paris-time
+mkdir $HOME/bin #create dir for executables
+PATH=$PATH:$HOME/bin # add dir to path , all files in bin can be	 						executed from any other dir.
+```
+
+```bash
+cat >any-time
+#!/bin/sh
+echo -n "The time in $1 is " # Use first argument
+TZ=$1 date
+sh any-time Europe/Amsterdam
+The time in Europe/Amsterdam is Sun Apr 12 16:05:06 CEST 2020
+
+
+```
+
+#### Shell Functions
+
+Functions . Maintained during shell's session
+
+**If you want to set variables/functions for all shell, add to .bashrc** 
+
+```bash
+ showtime() {  
+                local TZIN=$1; 
+                local TZOUT=$2; 
+                local TIME=$3; 
+                echo -n "$TZIN $TIME is $TZOUT "; 
+                TZ=$TZOUT date --date="TZ=\"$TZIN\" $TIME"; 
+ 			}
+ 			
+$ showtime America/New_York Asia/KolKata 11:45
+America/New_York 11:45 is Asia/KolKata Sun Apr 12 15:45:00 Asia 2020
+```
+
+#### Why the #!/bin/sh Shebang is required
+
+```bash
+When a script file starts with #!, then the Unix kernel can load and execute it (via the specified interpreter, e.g. /bin/sh) as if it was a compiled executable file.
+
+In addition, some shells employ a heuristic whereby if the kernel cannot execute a file marked as executable, they try to run it as a shell script.
+
+For example, tracing the execution of sh -c hi, where hi starts with #!/bin/sh results in the following exec system calls.
+
+27093 execve("/bin/sh", ["sh", "-c", "hi"], 0x7fffc6e28ec0 /* 38 vars */) = 0
+27094 execve("./hi", ["hi"], 0x555748cc6b48 /* 38 vars */) = 0
+On the other hand, if the first line is missing, then the execution goes like this.
+
+27111 execve("/bin/sh", ["sh", "-c", "hi"], 0x7fff5cb29500 /* 38 vars */) = 0
+27112 execve("./hi", ["hi"], 0x5608a2cb2b48 /* 38 vars */) = -1 ENOEXEC (Exec format error)
+27112 execve("/bin/sh", ["/bin/sh", "./hi"], 0x5608a2cb2b48 /* 38 vars */) = 0
+Notice how the second exec fails and then the shell invokes itself a shell to run the file as a shell script.
+```
 
