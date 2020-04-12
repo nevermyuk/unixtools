@@ -1,8 +1,8 @@
 ## Input/ Output Redirection
 
-STDINPUT - 1
+STDINPUT - 0
 
-STDOUTPUT- 2
+STDOUTPUT- 1
 
 STDERROR - 2
 
