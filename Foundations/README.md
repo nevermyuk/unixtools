@@ -555,3 +555,96 @@ $ echo a |
 2)ls a 
 ```
 
+## Data Processing Flow
+
+```bash
+$ git log --pretty=format:%aD FreeBSD-release/10.0.0 | 
+> cut -d, -f1 |
+> sort |
+> uniq -c |
+> sort -rn
+
+  42433 Tue
+  41945 Mon
+  41583 Wed
+  41354 Thu
+  39900 Fri
+  36476 Sun
+  34291 Sat
+```
+
+#### 1 ) Fetching
+
+```bash
+git log --pretty=format:%aD FreeBSD-release/10.0.0 | head # Fetch commits dates
+Thu, 16 Jan 2014 18:33:10 +0000
+Wed, 15 Jan 2014 01:14:52 +0000
+Tue, 14 Jan 2014 23:58:50 +0000
+Tue, 14 Jan 2014 21:06:44 +0000
+Tue, 14 Jan 2014 19:12:40 +0000
+Tue, 14 Jan 2014 19:10:38 +0000
+Tue, 14 Jan 2014 03:18:29 +0000
+Tue, 14 Jan 2014 01:04:11 +0000
+Tue, 14 Jan 2014 00:25:46 +0000
+Mon, 13 Jan 2014 23:48:01 +0000
+```
+
+#### 2 ) Selection
+
+```bash
+$ git log --pretty=format:%aD | # Fetch Commit Dates
+> cut -d, -f1 | # Select the weekday
+> head
+Tue
+Tue
+Thu
+Thu
+```
+
+#### 3) Processing
+
+```bash
+$ git log --pretty=format:%aD FreeBSD-release/10.0.0 | # Fetch Commit Dates
+> cut -d, -f1 | # Select the weekday
+> sort | # Bring all weekdays together
+> head
+Fri
+Fri
+Fri
+Fri
+```
+
+#### 4) Summarizing
+
+```bash
+$ git log --pretty=format:%aD FreeBSD-release/10.0.0 | # Fetch Commit Dates
+> cut -d, -f1 | # Select the weekday
+> sort | # Bring all weekdays together
+> uniq -c # count weekday occurences
+  39900 Fri
+  41945 Mon
+  34291 Sat
+  36476 Sun
+  41354 Thu
+  42433 Tue
+  41583 Wed
+```
+
+#### 5) Reporting
+
+```bash
+$ git log --pretty=format:%aD FreeBSD-release/10.0.0 | # Fetch Commit Dates
+> cut -d, -f1 | # Select the weekday
+> sort | # Bring all weekdays together
+> uniq -c # count weekday occurences
+> sort -rn # Order by descending popularity
+  42433 Tue
+  41945 Mon
+  41583 Wed
+  41354 Thu
+  39900 Fri
+  36476 Sun
+  34291 Sat
+
+```
+
