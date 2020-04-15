@@ -399,3 +399,159 @@ On the other hand, if the first line is missing, then the execution goes like th
 Notice how the second exec fails and then the shell invokes itself a shell to run the file as a shell script.
 ```
 
+## Execution Control
+
+`for` - iterate over a set of values
+
+```bash
+$ for i in Europe/London Europe/Paris Europe/Madrid ; do 
+> showtime America/Los_Angeles $i 11:45;
+> done 
+America/Los_Angeles 11:45 is Europe/London Wed Apr 15 19:45:00 BST 2020
+America/Los_Angeles 11:45 is Europe/Paris Wed Apr 15 20:45:00 CEST 2020
+America/Los_Angeles 11:45 is Europe/Madrid Wed Apr 15 20:45:00 CEST 2020
+
+$ TZONES='America/Los_angeles America/New_York Europe/London'
+$ for tzin in $TZONES; do
+> 	for tzout in $TZONES; do
+> 		showtime $tzin $tzout 11:45
+> done
+> 	done
+
+America/Los_angeles 11:45 is America/Los_angeles Wed Apr 15 11:45:00 America 2020
+America/Los_angeles 11:45 is America/New_York Wed Apr 15 07:45:00 EDT 2020
+America/Los_angeles 11:45 is Europe/London Wed Apr 15 12:45:00 BST 2020
+America/New_York 11:45 is America/Los_angeles Wed Apr 15 15:45:00 America 2020
+America/New_York 11:45 is America/New_York Wed Apr 15 11:45:00 EDT 2020
+America/New_York 11:45 is Europe/London Wed Apr 15 16:45:00 BST 2020
+Europe/London 11:45 is America/Los_angeles Wed Apr 15 10:45:00 America 2020
+Europe/London 11:45 is America/New_York Wed Apr 15 06:45:00 EDT 2020
+Europe/London 11:45 is Europe/London Wed Apr 15 11:45:00 BST 2020
+```
+
+`if` - execute various other commands based on the result of a condition; the result of whether another command succeeded or not
+
+```bash
+$ if test sourcefile -nt destfile ; then #-nt for newer than
+> cp sourcefile destfile
+> echo Refreshed destfile
+> fi
+$ if [ sourcefile -nt destfile ] ;  # alternative Old test syntax 
+>then cp sourcefile destfile; 
+>echo Refreshed destfile; 
+>fi
+Refreshed destfile
+$ if [ sourcefile -nt destfile ] ; then
+> cp sourcefile destfile
+> echo Refreshed destfile
+> else
+> echo destfile is up to date
+> fi
+destfile is up to date
+```
+
+`while` - iterate while a condition holds
+
+```bash
+$ ls |  # list all directory entries  
+> while read name ; do # For every entry
+> 	if [ -f $name -a -r $name ] ;  # If -f for regular file (-a for and) -r for readable.
+>		then  echo -n "$name ";  # Display name
+>		expr $(wc -c <$name) / $(wc -l <$name) # Display average character per line 
+                                          #  (-c for byte count divide/  -l for lines)
+>   fi
+> done |
+> head
+```
+
+`xargs` - for working with huge datasets. 
+
+- The command reads data from its standard input,
+- and then supplies them as arguments to a specified command that it executes.
+- It is needed, because the operating system, provides only a fixed amount of space for providing arguments to a command.
+- **Xargs overcomes this limit by executing the command repeatedly,with new batches of arguments chunked from its input.**
+
+```bash
+$ find . -type f | 
+> xargs cat | 
+> wc -l
+152064
+
+$ find '/c/Program Files' -type f | # Output names in program files
+> xargs stat -c '%Y %n' | # Output %Y modification time(s) and %n file name
+> sort -n |  # Output in Numeric Order -n
+> head -1 # Output oldest one
+stat: ./App : No such file or directory # Output of find contains some lines with spaces, on Windows system filenames have words separated by space. 
+# Xargs uses newline and a space to break up its arguments. So some filenames containing space are incorrectly broken apart. Leading to the creation and display of non-existing files.
+# Solution: 1) find -print0 option
+			# Separates output element using a null character instead of newline.
+#			2) Xargs flag -0 option,
+			# Specify input is separated by null characters instead of newline/spaces.
+			
+$ find '/c/Program Files' -type f -print0 |
+> xargs -0 stat -c '%Y %n' | 
+> sort -n | 
+> head -1
+Oldest file.
+```
+
+`case` - Run commands based on pattern matching
+
+```bash
+$ uname 
+Linux
+case $(uname) in 
+> Linux)
+> alias s=gnome-open
+> alias cpt='pwd | xsel --clipboard'
+> ;;
+> Darwin)
+>  alias s=open
+>  alias cpt='pwd | pbcopy'
+> ;;
+> CYGWIN*)
+> alias s=cygstart
+> alias cpt='cygpath -w `pwd` | tr -d \\n >/dev/clipboard'
+> ;;
+> esac
+
+$ alias
+alias s='gnome-open' # as it matches Linux pattern
+```
+
+#### Execution Control Quiz
+
+What will be the output of the following command?
+
+```bash
+for i in a b c ; do
+    for j in 2 1 ; do 
+        echo -n "$j $i "
+    done
+done
+2 a 1 a 2 b 1 b 2 c 1 c
+
+```
+
+Which of the following commands is equivalent to the following command ?
+
+```bash
+if a ; then
+    b
+fi
+a && b
+
+```
+
+Which of the following commands are equivalent to the command `echo a | xargs ls`?
+
+```bash
+1) 
+$ echo a | 
+> while read input #variable
+> do ls $input
+> done
+
+2)ls a 
+```
+
