@@ -619,6 +619,205 @@ $ curl -Ls https://www.spinellis.gr/unix/data/a.out > nm.o
 $ nm nm.o
 ```
 
+## Data from Graphical Desktop System
+
+#### Obtain Windows clipboard data
+
+```bash
+$ fmt -s /dev/clipboard
+$ tr 'A-Za-z' 'N-ZA-Mn-za-m' </dev/clipboard >/dev/clipboard
+```
+
+#### Obtain other clipboard data
+
+```bash
+$ pbpaste | # Under macOS 
+> tr 'A-Za-z' 'N-ZA-Mn-za-m' |
+> pbcopy
+$ xsel --clipboard | # On the X Window System
+> tr 'A-Za-z' 'N-ZA-Mn-za-m' |
+> xsel --clipboard
+```
+
+#### File properties on macOS
+
+```bash
+$ mdls study.docx  | tail -26 # Obtain a document's properties (macOS)
+```
+
+#### Find macOS files by properties
+
+```bash
+$ mdfind "kMDItemAuthors == 'John Doe'" # Find documents by property
+```
+
+#### Handle Cygwin Paths
+
+```bash
+$ cygpath -w /tmp # Convert Cygwin path to Windows format
+$ cygpath 'C:\Windows' # Convert Windows path to Cygwin format
+$ echo $APPDATA # Location of user's documents
+$ du -sh $APPDATA # Pass Windows path to Cygwin tool
+```
+
+#### Launch Document
+
+```bash
+$ cd ~/Desktop # Navigate to the Desktop
+$ wget -q http://www.gutenberg.org/files/98/old/2city12p.pdf
+$ cygstart 2city12p.pdf # Launch specified file under Cygwin
+$ open 2city12p.pdf # Launch specified file under macOS
+$ xdg-open  2city12p.pdf # Launch specified file under Gnome
+$ kde-open  2city12p.pdf # Launch specified file under KDE
+```
+
+## System Administration
+
+#### Unix Administrative files
+
+```bash
+$ cd /etc # Location of system configuration files
+$ find . 2>/dev/null | wc -l
+2989
+$ head passwd # User accounts
+```
+
+#### List running processes
+
+```bash
+$ ps # List running processes
+$ ps uw # List running processes with more details
+$ ps xuw # Also include background processes
+$ ps auxw | head # Obtain information on all running processes
+
+```
+
+### The /proc file system
+
+```bash
+$ cd /proc  # info about processes etc.
+$ ls -CF | head -5
+$ head -5 cpuinfo
+```
+
+#### Obtain file details
+
+```bash
+$ stat /etc/motd # Output file's details
+$ stat -c '%s' /etc/motd # File size
+$ stat -c '%Y' /etc/motd # File modification (seconds since Epoch)
+1370204982
+$ date -d @1370204982 # Format Epoch time
+Sun Jun  2 23:29:42 EEST 2013
+$ ls -l /etc/motd # Verify Epoch time
+-rw-r--r-- 1 root root 286 Jun  2  2013 /etc/motd
+$ stat -c '%U' $HOME # File user
+user
+```
+
+#### Access the Windows registry
+
+```bash
+$ cd /proc/registry # Navigate to the registry virtual folder
+$ cd 'HKEY_LOCAL_MACHINE/SOFTWARE/Microsoft/Windows NT/CurrentVersion/'
+$ ls -CF | head # List contents
+$ more ProductName # Read installed software value
+$ regtool set /HKEY_CURRENT_USER/Software/Cygwin/TestEntry 'Hello there' # Set value
+$ more /proc/registry/HKEY_CURRENT_USER/Software/Cygwin/TestEntry # Read value
+$ regtool get /HKEY_CURRENT_USER/Software/Cygwin/TestEntry # Read value
+```
+
+#### Obtain Windows system Data
+
+```bash
+$ find /cygdrive/c/Windows/system32 -maxdepth 1 -type f -name \*.dll | # Find DLL files
+> head | # First ten
+> while read f ; do
+>   wname=$(cygpath -w $f | sed 's/\\/\\\\/g') # Obtain Windows name with double \\
+>   wmic datafile where "Name=\"$wname\"" get name, version # Run wmic query
+> done |
+> grep windows # Filter out blank lines and headers
+```
+
+#### List Windows Services
+
+```bash
+$ wmic service get name,state | head # List status of Windows services
+$ wmic process get name,virtualsize |
+> sort -k2rn | # List by reverse numerical order of second field
+> head -6 # First six entries
+```
+
+#### List Windows Processes
+
+```bash
+$ tasklist | head
+```
+
+## Generators
+
+#### Generate number sequences
+
+```bash
+$ seq 5 
+$ for i in $(seq 50) ; do
+>   echo -n '.'
+> done
+$ seq 0.1 4.5
+$ seq 0 20 100
+```
+
+#### Generate blocks of data
+
+```bash
+$ tar cf - /home | ssh tapehost.example.com dd of=/dev/st0 bs=1M
+$ dd if=/dev/zero of=1GBfile bs=1M count=1000
+$ ls -lh 1GBfile
+$ ssh remote.example.com 'nc -l 9999 >/dev/null &'
+$ dd if=/dev/zero bs=1M count=10 | nc -w 1 remote.example.com 9999 # good for testing speed
+$ curl ftp://ftp.freebsd.org/pub/FreeBSD/releases/amd64/amd64/ISO-IMAGES/\
+> 10.3/FreeBSD-10.3-RELEASE-amd64-memstick.img | # Fetch bootable FreeBSD image
+> sudo dd of=/dev/sdx bs=10240 # Write it to a pen drive
+```
+
+#### Generate repeated strings
+
+```bash
+$ yes | head
+$ yes no | head -5
+$ yes | fsck /dev/sdb2
+```
+
+#### Dictionary file
+
+```bash
+$ cd /usr/share/dict
+$ head words # First ten words in dictionary
+$ tail words # Last ten words in dictionary
+$ wc -l words # Number of lines (words) in dictionary
+```
+
+#### Generate random data
+
+```bash
+$ openssl rand 10 | # Generate ten random bytes
+> od -d -A n # Convert them into five integers
+$ openssl rand 256 | # Generate 256 random bytes
+> tr -cd 'a-zA-Z0-9!@#$%*()-_+=:;",./?' | # Keep printable characters
+> cut -b1-10 # Print first ten characters
+u?L5rK_EK,
+```
+
+### Quiz
+
+```bash
+How many lines are produced if you create a sequence starting from 7 up to at most 170 in increments of 0.3?
+$ seq 7 0.3 170 | wc
+Create a file by writing to it with the dd command twelve 32k-size blocks.
+$ dd if=/dev/zero of=32KBfile count=12 bs=32K
+
+```
+
 
 
 ## Resources
@@ -634,6 +833,14 @@ $ nm nm.o
 - [grep](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/grep.html) 
 - [sed](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sed.html) 
 - [strip](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/strip.html) 
+- [Cygwin](https://www.cygwin.com/) 
+- [Outwit](https://www.spinellis.gr/sw/outwit/) 
+- [du](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/du.html)
+- [tr](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tr.html) 
+- [dd](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/dd.html) 
+- [od](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/od.html)
+- [tail](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/tail.html) 
+- [openssl](https://en.wikipedia.org/wiki/OpenSSL) 
 
 #### MUST READ
 
