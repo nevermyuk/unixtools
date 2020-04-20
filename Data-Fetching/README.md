@@ -1,6 +1,6 @@
 # [Data](https://git-scm.com/book/en/v2) Fetching
 
-## From the Web ( CURL )
+## Data From the Web ( CURL )
 
 #### Fetch Document from Web
 
@@ -100,7 +100,7 @@ $ curl ldap://ldap.satrapade.com:389/ou=People,dc=satrapade,dc=com\
 > '?cn?sub?(&(objectClass=person)(uid=dds))'
 ```
 
-## Archives
+## Data from Archives
 
 #### Archive Listing
 
@@ -203,7 +203,7 @@ $ ls -lR /home/joe >ls.out ; bzip2 ls.out
 Piping the output of ls to gzip or bzip2 with the -c argument and then redirecting their output to the desired file is the best choice. Another choice that works involves redirecting the output of ls into a temporary file and then compressing that file by passing it as an argument to gzip or bzip2.
 ```
 
-## Remote Hosts
+## Data from Remote Hosts
 
 #### Create private/public key pair
 
@@ -318,7 +318,7 @@ $ rsync ./a trantor:
 $ ssh trantor dd of=a <a
 ```
 
-## Local Filesystems
+## Data from Local Filesystems
 
 #### Recurse Directories with Find
 
@@ -386,7 +386,7 @@ Your current directory is /usr/include; the location of C header files. These by
 $ find . -name '*.h' -type f
 ```
 
-## Version Control System
+## Data from Version Control System
 
 #### Repo Fetching
 
@@ -511,6 +511,114 @@ $ git show d0ede46da8aaff13bccd1f2b3fd201bb383d68f9:src/main/java/org/umlgraph/d
 
 ## 
 
+## Data from Compiled Code
+
+#### List object file contents
+
+```bash
+$ cat hello.c # List example C file
+$ cc -c hello.c # Compile the file into object format
+$ nm hello.o # List symbols in object file
+                 U fprintf
+0000000000000004 C global
+0000000000000000 b local
+0000000000000000 t localfun
+0000000000000006 T main
+                 U stdout
+```
+
+#### List executable file contents
+
+```bash
+$ cc -o hello hello.c # Compile and link file into executable
+$ nm hello | head # List first ten symbols
+0000000000600990 B __bss_start
+0000000000600998 b completed.6661
+0000000000600980 D __data_start
+0000000000600980 W data_start
+0000000000400480 t deregister_tm_clones
+0000000000400500 t __do_global_dtors_aux
+0000000000600768 t __do_global_dtors_aux_fini_array_entry
+0000000000600988 D __dso_handle
+0000000000600778 d _DYNAMIC
+0000000000600990 D _edata
+$ strip hello # Remove symbols
+$ nm hello # Attempt to list symbols
+nm: hello: no symbols
+$ nm /bin/ls # Attempt to list symbols
+nm: /bin/ls: no symbols    # Strip to save disk space
+```
+
+#### File with most global variables
+
+```bash
+$ nm -o $(find . -name \*.o) | head -3 # Run nm on all .o files
+./modules/standard/mod_dir.o:00000000 t add_index
+./modules/standard/mod_dir.o:         U ap_construct_url
+./modules/standard/mod_dir.o:         U ap_destroy_sub_req
+$ nm -o $(find . -name \*.o) |
+> grep ' D ' | head -3 # Obtain only uninitialized global data definitions
+./modules/standard/mod_dir.o:00000000 D dir_module
+./modules/standard/mod_actions.o:00000000 D action_module
+./modules/standard/mod_auth.o:00000000 D auth_module
+$ nm -o $(find . -name \*.o) |
+> grep ' D ' |
+> cut -d: -f 1 | head -3 # Get file name
+./modules/standard/mod_dir.o
+./modules/standard/mod_actions.o
+./modules/standard/mod_auth.o
+$ nm -o $(find . -name \*.o) |
+> grep ' D ' |
+> cut -d: -f 1 |
+> sort | uniq -c | sort -rn | head -5 # Order by number of global variables
+     37 ./main/http_main.o
+      2 ./modules.o
+      2 ./main/http_config.o
+      1 ./modules/standard/mod_userdir.o
+      1 ./modules/standard/mod_status.o
+```
+
+#### Find shared libraries
+
+```bash
+$ ldd /bin/ls # List dynamically linked libraries
+linux-vdso.so.1 (0x00007ffe99964000)
+$ ldd /bin/* | # Obtain shared libraries of all files
+> sed 's/.*=>//;s/^\s*//;s/ .*//' | # Get absolute library path
+> sort | uniq -c | sort -rn | head # Count
+    108 linux-vdso.so.1 # used most
+    108 /lib/x86_64-linux-gnu/libc.so.6
+    108 /lib64/ld-linux-x86-64.so.2
+     32 /lib/x86_64-linux-gnu/libdl.so.2
+```
+
+#### List Java compiled files
+
+```bash
+$ javap -cp antlr-3.4-complete.jar org/antlr/runtime/ANTLRFileStream
+```
+
+#### List Windows compiled files
+
+```bash
+$ cd /cygdrive/c/Windows/
+$ dumpbin /imports notepad.exe | head -20 # List imported symbols
+$ cd /cygdrive/c/Windows/System32
+$ dumpbin /exports wsock32.dll | head -22 # List exported symbols
+```
+
+### Quiz
+
+```bash
+Which one of the (file - tool) pairings is correct?
+/bin/ls - ldd, /bin/ls - nm, app.exe - dumpbin, Test.class - javap, ls.o - nm, app.obj - dumpbin, zlib.dll - dumpbin
+
+Which of the following symbols are defined in the file https://www.spinellis.gr/unix/data/a.out?
+
+$ curl -Ls https://www.spinellis.gr/unix/data/a.out > nm.o
+$ nm nm.o
+```
+
 
 
 ## Resources
@@ -521,6 +629,11 @@ $ git show d0ede46da8aaff13bccd1f2b3fd201bb383d68f9:src/main/java/org/umlgraph/d
 - [OpenSSH](https://www.openssh.com/) 
 - [kill](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/kill.html) 
 - [ps](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/ps.html) 
+- [nm](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/nm.html) 
+- [cut](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/cut.html)
+- [grep](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/grep.html) 
+- [sed](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/sed.html) 
+- [strip](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/strip.html) 
 
 #### MUST READ
 
